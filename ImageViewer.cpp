@@ -447,5 +447,22 @@ void ImageViewer::on_sko_clicked() {
 }
 
 void ImageViewer::on_sym_clicked() {
+	if (ui->polygon->isChecked()) {				//os sumernosti je urcena prvym a druhym podom polygonu
+		int i;
+		double a = poly[1].y() - poly[0].y();
+		double b = -(poly[1].x() - poly[0].x());
+		double c = -a * poly[0].x() - b * poly[0].y();
+
+		for (i = 2; i < poly.count(); i++) {
+			double x = poly[i].x();
+			double y = poly[i].y();
+			poly[i].setX(x - 2 * a * (a * x + b * y + c) / (a * a + b * b));
+			poly[i].setY(y - 2 * b * (a * x + b * y + c) / (a * a + b * b));
+		}
+	}
+	else {									//horizontalna os cez prvy bod
+		poly[1].setX(poly[0].x() - poly[1].x() + poly[0].x());
+	}
+	getCurrentViewerWidget()->kresliPolygon(poly, farba, ui->comboBox->currentIndex());
 }
 

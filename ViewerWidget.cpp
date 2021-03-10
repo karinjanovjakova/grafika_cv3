@@ -53,9 +53,10 @@ bool ViewerWidget::isEmpty()
 //Data function
 void ViewerWidget::setPixel(int x, int y, const QColor& color)
 {
-	if (isInside(x, y)) {
+	if (isInside(x, y)) 
 		data[x + y * img->width()] = color.rgb();
-	}
+	else
+		qDebug() << "nechce vykreslit bod" << x << "," << y << "\n";
 }
 void ViewerWidget::setPixel(int x, int y, unsigned char r, unsigned char g, unsigned char b)
 {
@@ -297,13 +298,13 @@ void ViewerWidget::kruznica(QPoint A, QPoint B, QColor color) {
 }
 
 void ViewerWidget::kresliPolygon(QVector<QPoint> body, QColor color, int algo) {
-	QPoint A, B;
-	int i ;
+	//QPoint A, B;
+	//int i ;
 	clear();
 	update();
 
 	//usecka s orezanim
-	if (body[0].x()>0 && body[0].y()>0 && body[1].x() > 0 && body[1].y() > 0 && body[0].x() < img->width() && body[0].y() < img->height() && body[1].x() < img->width() && body[1].y() < img->height()) {
+	/*if (body[0].x()>0 && body[0].y()>0 && body[1].x() > 0 && body[1].y() > 0 && body[0].x() < img->width() && body[0].y() < img->height() && body[1].x() < img->width() && body[1].y() < img->height()) {
 		A.setX(body[0].x());
 		A.setY(body[0].y());
 		B.setX(body[body.count() - 1].x());
@@ -312,14 +313,125 @@ void ViewerWidget::kresliPolygon(QVector<QPoint> body, QColor color, int algo) {
 			usecka_DDA(A, B, color);
 		else if (algo == 1)
 			usecka_Bresenham(A, B, color);
+		qDebug() << "vykresluje cele\n";
 	}
-	else {
+	else {*/
+	if (body.count()==2){
+		QVector<QPoint> vrcholy;
+		QPoint d, n, w, e, A, B, E;
+		double tl = 0, tu = 1, wn, dn, t;
+		int i=0;
+		E.setX(0);
+		E.setY(0);
+		vrcholy.push_back(E);
+		E.setX(img->width()-1);
+		E.setY(0);
+		vrcholy.push_back(E);
+		E.setX(img->width()-1);
+		E.setY(img->height()-1);
+		vrcholy.push_back(E);
+		E.setX(0);
+		E.setY(img->height()-1);
+		vrcholy.push_back(E);
+		d.setX(body[1].x() - body[0].x());
+		d.setY(body[1].y() - body[0].y());
 
-	}
+		for (i = 0; i < vrcholy.count(); i++) {
+			w = body[0] - vrcholy[i];
+			e = vrcholy[(i + 1)%4] - vrcholy[i];
+			n.setX(-e.y());
+			n.setY(e.x());
+			wn = n.dotProduct(n, w);
+			dn = n.dotProduct(n, d);
+			if (dn != 0) {
+				t = -wn / dn;
+				if (dn < 0 && t >= 0) {
+					if (t < tu)
+						tu = t;
+					//qDebug() << tu << " " << t<< "\n";
+				}
+				if (dn > 0 && t <= 1) {
+					if (t > tl)
+						tl = t;
+				}
+			}
+		}
+		if (tl < tu) {
+			A = body[0] + (body[1] - body[0]) * tl;
+			B = body[0] + (body[1] - body[0]) * tu;
+			//qDebug() << tu << " " << tl << "\n";
+			if (A.x() < 0 || A.y() < 0 || A.x() > img->width() || A.y() > img->height() || B.x() < 0 || B.y() < 0 || B.x() > img->width() || B.y() > img->height())
+				//qDebug() << "vysla blbost\n";
+				i = i;
+			else {
+				if (algo == 0)
+					usecka_DDA(A, B, color);
+				else
+					usecka_Bresenham(A, B, color);
+			}
+		}
+	}	
+
+	//polygon s orezanim
+	QVector<QPoint> W, V;
+	V = body;
+		if (V.count() > 2) {
+			//qDebug() << V;
+			QPoint S, P, A, B;
+			int Xmin[4] = { 0, 0, -img->width()+1, -img->height()+1 };
+			int xmin = 0, j = 0, i=0;
+			for (j = 0; j < 4; j++) {
+				xmin = Xmin[j];
+				if (V.count()>0)
+					S = V[V.count() - 1];
+				for (i = 0; i < V.count(); i++) {
+					if (V[i].x() >= xmin) {
+						if (S.x() >= xmin) {
+							W.push_back(V[i]);
+						}
+						else {
+							P.setX(xmin);
+							P.setY(S.y() + (xmin - S.x()) * (V[i].y() - S.y()) / (V[i].x() - S.x()));
+							W.push_back(P);
+							W.push_back(V[i]);
+						}
+					}
+					else {
+						if (S.x() >= xmin) {
+							P.setX(xmin);
+							P.setY(S.y() + (xmin - S.x()) * (V[i].y() - S.y()) / (V[i].x() - S.x()));
+							W.push_back(P);
+						}
+					}
+					S = V[i];
+				}
+				//qDebug() << "W je: " << W;
+				V.clear();
+				for (i = 0; i < W.count(); i++) {
+					P.setX(W[i].y());
+					P.setY(-W[i].x());
+					V.push_back(P);
+				}
+				W.clear();
+			}
+			for (i = 0; i < V.count(); i++) {
+				A.setX(V[i].x());
+				A.setY(V[i].y());
+				B.setX(V[(i + 1) % (V.count())].x());
+				B.setY(V[(i + 1) % (V.count())].y());
+				if (algo == 0)
+					usecka_DDA(A, B, color);
+				else if (algo == 1)
+					usecka_Bresenham(A, B, color);
+			}
+		
+		}
+	update();
+}
 
 
 
-
+	/*
 	for (i = 1; i < body.count(); i++) {
 		A.setX(body[i - 1].x());
 		A.setY(body[i - 1].y());
@@ -339,9 +451,8 @@ void ViewerWidget::kresliPolygon(QVector<QPoint> body, QColor color, int algo) {
 	else if (algo == 1)
 		usecka_Bresenham(A, B, color);
 
+		*/
 
-	update();
-}
 
 /*QVector<QPoint> ViewerWidget::rotacia(double uhol, QVector<QPoint> polygon) {
 	QVector<QPoint> temp; 
