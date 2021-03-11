@@ -8,6 +8,7 @@ private:
 	QImage* img = nullptr;
 	QRgb* data = nullptr;
 	QPainter* painter = nullptr;
+	bool trebakreslit;
 
 public:
 	ViewerWidget(QString viewerName, QSize imgSize, QWidget* parent = Q_NULLPTR);

@@ -316,61 +316,110 @@ void ViewerWidget::kresliPolygon(QVector<QPoint> body, QColor color, int algo) {
 		qDebug() << "vykresluje cele\n";
 	}
 	else {*/
+
+
+
+
+
 	if (body.count()==2){
+
+
 		QVector<QPoint> vrcholy;
 		QPoint d, n, w, e, A, B, E;
 		double tl = 0, tu = 1, wn, dn, t;
-		int i=0;
+		int i = 0;
 		E.setX(0);
 		E.setY(0);
 		vrcholy.push_back(E);
-		E.setX(img->width()-1);
+		E.setX(img->width() - 1);
 		E.setY(0);
 		vrcholy.push_back(E);
-		E.setX(img->width()-1);
-		E.setY(img->height()-1);
+		E.setX(img->width() - 1);
+		E.setY(img->height() - 1);
 		vrcholy.push_back(E);
 		E.setX(0);
-		E.setY(img->height()-1);
+		E.setY(img->height() - 1);
 		vrcholy.push_back(E);
 		d.setX(body[1].x() - body[0].x());
 		d.setY(body[1].y() - body[0].y());
 
-		for (i = 0; i < vrcholy.count(); i++) {
-			w = body[0] - vrcholy[i];
-			e = vrcholy[(i + 1)%4] - vrcholy[i];
-			n.setX(-e.y());
-			n.setY(e.x());
-			wn = n.dotProduct(n, w);
-			dn = n.dotProduct(n, d);
-			if (dn != 0) {
-				t = -wn / dn;
-				if (dn < 0 && t >= 0) {
-					if (t < tu)
-						tu = t;
-					//qDebug() << tu << " " << t<< "\n";
+		if ((body[0].x() > 0 && body[0].y() > 0 && body[0].x() < img->width() && body[0].y() < img->height()) || (body[1].x() > 0 && body[1].y() > 0 && body[1].x() < img->width() && body[1].y() < img->height())) {
+			// ak aspon 1 bod je vnutri
+			trebakreslit = true;
+		}
+		else  {
+			QPoint priesecnik;
+			int x, y, priesecniky=0;
+			int x1 = body[0].x(), y1 = body[0].y(), x2 = body[1].x(), y2 = body[1].y(), x3, x4, y3, y4;
+			//oba body su vonku, treba zistit, ci usecka presekne platno
+			for (i = 0; i < vrcholy.count(); i++) {
+				x3 = vrcholy[i].x();
+				y3 = vrcholy[i].y();
+				x4 = vrcholy[(i + 1) % 4].x();
+				y4 = vrcholy[(i + 1) % 4].y();
+				float d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+				float pre = (x1 * y2 - y1 * x2), post = (x3 * y4 - y3 * x4);
+				float x = (pre * (x3 - x4) - (x1 - x2) * post) / d;
+				float y = (pre * (y3 - y4) - (y1 - y2) * post) / d;
+				priesecnik.setX(x);			//priesecnik priamok
+				priesecnik.setY(y);
+				int mensieX=body[0].x(), vacsieX=body[1].x(), mensieY=body[0].y(), vacsieY=body[1].y();			//"stvorec" okolo usecky na zistenie, ci je priesecnik naozaj na usecke
+				if (body[0].x() > body[1].x()) {
+					mensieX = body[1].x();
+					vacsieX = body[0].x();
 				}
-				if (dn > 0 && t <= 1) {
-					if (t > tl)
-						tl = t;
+				if (body[0].y() > body[1].y()) {
+					mensieY = body[1].y();
+					vacsieY = body[0].y();
+				}
+				if (priesecnik.x() >= 0 && priesecnik.x() < img->width() && priesecnik.y() >= 0 && priesecnik.y() < img->height() && priesecnik.x() >= mensieX && priesecnik.x() < vacsieX && priesecnik.y() >= mensieY && priesecnik.y() < vacsieY)
+					//ak je to naozaj priesecnik usecky a platna
+					priesecniky++;
+				//qDebug()<< priesecnik;
+			}
+			if (priesecniky > 0)
+				trebakreslit = true;
+			else
+				trebakreslit = false;
+			//qDebug() << trebakreslit;
+
+		}
+
+
+		if (trebakreslit) {
+
+			for (i = 0; i < vrcholy.count(); i++) {
+				w = body[0] - vrcholy[i];
+				e = vrcholy[(i + 1) % 4] - vrcholy[i];
+				n.setX(-e.y());
+				n.setY(e.x());
+				wn = w.dotProduct(n, w);
+				dn = n.dotProduct(n, d);
+				if (dn != 0) {
+					t = -wn / dn;
+					if (dn > 0 && t <= 1) {
+						if (t > tl)
+							tl = t;
+					}
+					else if (dn < 0 && t >= 0) {
+						if (t < tu)
+							tu = t;
+						//qDebug() << tu << " " << t<< "\n";
+					}
 				}
 			}
-		}
-		if (tl < tu) {
-			A = body[0] + (body[1] - body[0]) * tl;
-			B = body[0] + (body[1] - body[0]) * tu;
-			//qDebug() << tu << " " << tl << "\n";
-			if (A.x() < 0 || A.y() < 0 || A.x() > img->width() || A.y() > img->height() || B.x() < 0 || B.y() < 0 || B.x() > img->width() || B.y() > img->height())
-				//qDebug() << "vysla blbost\n";
-				i = i;
-			else {
+			if (tl < tu) {
+				A = body[0] + (body[1] - body[0]) * tl;
+				B = body[0] + (body[1] - body[0]) * tu;
+				//qDebug() << tu << " " << tl << "\n";
 				if (algo == 0)
 					usecka_DDA(A, B, color);
 				else
 					usecka_Bresenham(A, B, color);
 			}
 		}
-	}	
+	}
+		
 
 	//polygon s orezanim
 	QVector<QPoint> W, V;
