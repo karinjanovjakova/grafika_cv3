@@ -109,10 +109,30 @@
           <item row="1" column="1">
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
-             <widget class="QDoubleSpinBox" name="sca_x"/>
+             <widget class="QDoubleSpinBox" name="sca_x">
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="minimum">
+               <double>0.100000000000000</double>
+              </property>
+              <property name="value">
+               <double>0.100000000000000</double>
+              </property>
+             </widget>
             </item>
             <item>
-             <widget class="QDoubleSpinBox" name="sca_y"/>
+             <widget class="QDoubleSpinBox" name="sca_y">
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="minimum">
+               <double>0.100000000000000</double>
+              </property>
+              <property name="value">
+               <double>0.100000000000000</double>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -140,6 +160,9 @@
             </property>
             <property name="maximum">
              <double>20.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.000000000000000</double>
             </property>
            </widget>
           </item>

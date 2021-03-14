@@ -391,7 +391,6 @@ void ImageViewer::on_color_clicked()
 }
 
 void ImageViewer::on_Clear_clicked() {
-	//A,B nastavit na nezmysly		nakreslene na false		prvybod na false		vycisti plochu		vymaze dynamicke pole bodov ak polygon.isChecked()		enable pre polygon a comboBox		
 	nakreslene = false;
 	prvybod = false;
 	poly.clear();
@@ -447,7 +446,7 @@ void ImageViewer::on_sko_clicked() {
 }
 
 void ImageViewer::on_sym_clicked() {
-	if (ui->polygon->isChecked()) {				//os sumernosti je urcena prvym a druhym podom polygonu
+	if (ui->polygon->isChecked()) {				//os sumernosti je urcena prvym a druhym bodom polygonu
 		int i;
 		double a = poly[1].y() - poly[0].y();
 		double b = -(poly[1].x() - poly[0].x());
@@ -460,7 +459,7 @@ void ImageViewer::on_sym_clicked() {
 			poly[i].setY(y - 2 * b * (a * x + b * y + c) / (a * a + b * b));
 		}
 	}
-	else {									//horizontalna os cez prvy bod
+	else {									//vertikalna os cez prvy bod
 		poly[1].setX(poly[0].x() - poly[1].x() + poly[0].x());
 	}
 	getCurrentViewerWidget()->kresliPolygon(poly, farba, ui->comboBox->currentIndex());
